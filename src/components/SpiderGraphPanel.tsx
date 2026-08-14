@@ -200,7 +200,7 @@ export function SpiderGraphPanel({ data, width, height, options: rawOptions }: P
     );
 
   return (
-    <div className={styles.panel}>
+    <div className={styles.panel} data-testid="spidergraph-panel">
       <div className={styles.layout} style={{ flexDirection: options.legendPlacement === 'bottom' ? 'column' : 'row' }}>
         <svg
           className={styles.chart}
