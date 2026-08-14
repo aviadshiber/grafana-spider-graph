@@ -13,6 +13,12 @@
       { "name": "Documentation", "url": "https://github.com/aviadshiber/grafana-spider-graph#readme" },
       { "name": "Report an issue", "url": "https://github.com/aviadshiber/grafana-spider-graph/issues" }
     ],
+    "screenshots": [
+      {
+        "name": "SpiderGraph service comparison dashboard",
+        "path": "img/spidergraph-overview.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },

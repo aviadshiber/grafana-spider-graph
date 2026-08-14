@@ -66,3 +66,7 @@ updates:
     commit-message:
       prefix: 'chore(ci)'
     open-pull-requests-limit: 5
+    groups:
+      codeql:
+        patterns:
+          - 'github/codeql-action/*'

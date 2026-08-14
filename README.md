@@ -1,6 +1,45 @@
-# SpiderGraph panel for Grafana
+# SpiderGraph
 
-SpiderGraph is a frontend-only Grafana panel for comparing multivariate series on a radar/spider chart. It is responsive, theme-aware, keyboard accessible, dependency-light, and deliberately bounded for dashboard safety.
+[![CI](https://github.com/aviadshiber/grafana-spider-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/aviadshiber/grafana-spider-graph/actions/workflows/ci.yml)
+[![Security](https://github.com/aviadshiber/grafana-spider-graph/actions/workflows/security.yml/badge.svg)](https://github.com/aviadshiber/grafana-spider-graph/actions/workflows/security.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/aviadshiber/grafana-spider-graph/badge)](https://scorecard.dev/viewer/?uri=github.com/aviadshiber/grafana-spider-graph)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Grafana](https://img.shields.io/badge/Grafana-%3E%3D11.5.2-F46800?logo=grafana)](https://grafana.com/)
+
+SpiderGraph is a frontend-only Grafana panel for comparing multivariate series on a responsive radar/spider chart. It accepts ordinary Grafana data frames, supports metrics with different units through per-axis normalization, and keeps the raw values available in tooltips and an accessible table.
+
+![SpiderGraph service comparison dashboard in Grafana](src/img/spidergraph-overview.png)
+
+> **Project status:** SpiderGraph is in active alpha development. The public contract is documented in [`docs/data-model.md`](docs/data-model.md); behavior outside that contract may change before the first stable release.
+
+## Highlights
+
+- Wide and long table parsing across multiple Grafana data frames.
+- Per-axis or shared scaling, optional zero inclusion, clamping, and explicit domain overrides.
+- Grafana units, decimals, display names, fixed colors, and light/dark theme support.
+- Legend filtering, keyboard-focusable points, color-independent dash patterns, and an optional raw-value table.
+- Pure parser, geometry, and migration layers with unit and property tests.
+- Hard ingestion/rendering ceilings with actionable diagnostics.
+
+## Compatibility
+
+| Grafana version  | Support tier                                                                              |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| 11.5.2 and later | Supported and tested in the CI compatibility matrix.                                      |
+| Nightly          | Continuously tested as an early-warning target; regressions may require upstream changes. |
+
+SpiderGraph is a panel plugin, not a data source. Grafana must be able to query the data source that provides the fields described in the [data model](docs/data-model.md).
+
+## Quick start
+
+Requirements: Node.js 22+, npm, and Docker Compose.
+
+```bash
+npm ci
+npm run server
+```
+
+Open <http://localhost:3000>, then open the provisioned **SpiderGraph Examples** dashboard or add a SpiderGraph panel to your own dashboard. For a local development loop, run `npm run dev` in a second terminal. See [development and testing](docs/development.md).
 
 ## Data formats
 
@@ -12,35 +51,25 @@ Wide tables contain one string axis field and one or more numeric series fields:
 | Latency      |       120 |       180 |
 | Throughput   |       850 |       720 |
 
-Long tables contain `axis`, `series`, and `value` fields. Field names can be mapped in panel options. Duplicate axis/series cells use the selected reducer. Missing values can remain gaps or become zero.
+Long tables contain `axis`, `series`, and `value` fields. Field names can be mapped in panel options. Duplicate axis/series cells use the selected reducer, and missing values can remain gaps or become zero.
 
-Per-axis normalization is the default because metrics commonly have different units. Domain precedence is Grafana field min/max override, optional min/max columns, then the observed extent. Tooltips and the accessible table always show raw formatted values.
+Per-axis normalization is the default because metrics commonly have different units. Domain precedence is Grafana field min/max override, optional min/max columns, then the observed extent. Tooltips and the accessible table always show raw formatted values. See [Data model and panel contract](docs/data-model.md) for the complete schema and limits.
 
-## Features
+## Documentation
 
-- Wide and long table parsing across multiple Grafana data frames
-- Per-axis or shared scaling, optional zero inclusion, and clamping
-- Grafana units, decimals, display names, fixed colors, light/dark themes
-- Legend filtering, keyboard-focusable data points, SVG name/description, optional raw-value table
-- Color-independent dash patterns and visible focus behavior
-- Pure geometry and migration layers with unit/property tests
-- Hard ingestion/rendering ceilings with actionable diagnostics
-- CI, Grafana E2E test harness, plugin validation, signing, SBOM, dependency review, CodeQL, and release attestations
+- [Data model and panel contract](docs/data-model.md)
+- [Architecture](docs/architecture.md)
+- [Deployment](docs/deployment.md)
+- [Development and testing](docs/development.md)
+- [Support](docs/support.md)
+- [Security posture and accepted limitations](docs/security-posture.md)
+- [Roadmap](ROADMAP.md)
 
-## Development
+## Community and governance
 
-Requires Node.js 22.11+ and Docker.
+Contributions, issue reports, and documentation improvements are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), [GOVERNANCE.md](GOVERNANCE.md), and the [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 
-```bash
-npm ci
-npm run typecheck
-npm run lint
-npm run test:ci
-npm run build
-npm run server
-```
-
-Open <http://localhost:3000>. After changing `src/plugin.json`, restart Grafana.
+The plugin ID `aviadshiber-spidergraph-panel` is a saved-dashboard compatibility contract. Do not change it after publication. Catalog inclusion and signing are external review processes and are not implied by using this repository.
 
 ## Packaging and signing
 
@@ -51,8 +80,8 @@ mv dist aviadshiber-spidergraph-panel
 zip -r aviadshiber-spidergraph-panel-0.1.0.zip aviadshiber-spidergraph-panel
 ```
 
-The plugin ID is a saved-dashboard compatibility contract. Do not change it after publication. See [deployment](docs/deployment.md), [data model](docs/data-model.md), and [security posture](docs/security-posture.md).
+Use a signed catalog release for production after Grafana approves the plugin. Unsigned builds are intended for the development environment. See [deployment](docs/deployment.md).
 
 ## License
 
-Apache-2.0
+SpiderGraph is licensed under the [Apache License 2.0](LICENSE).

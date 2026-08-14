@@ -42,6 +42,7 @@ function props(options: Partial<SpiderGraphOptions> = {}): PanelProps<SpiderGrap
 describe('SpiderGraphPanel', () => {
   it('renders accessible chart semantics and focusable values', () => {
     render(<SpiderGraphPanel {...props()} />);
+    expect(screen.getByTestId('spidergraph-panel')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /spider graph with 3 axes and 1 series/i })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /alpha, speed: 8/i })).toHaveAttribute('tabindex', '0');
     expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'true');
