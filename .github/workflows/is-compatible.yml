@@ -1,0 +1,51 @@
+name: Latest Grafana API compatibility check
+on: [pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  compatibilitycheck:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify npm registry and lockfile
+        run: |
+          set -euo pipefail
+          test "$(npm config get registry)" = "https://registry.npmjs.org/"
+          bad_urls="$(jq -r '.. | objects | .resolved? // empty' package-lock.json | grep -Ev '^https://registry\.npmjs\.org/' || true)"
+          if [ -n "$bad_urls" ]; then
+            echo 'package-lock.json contains a non-public or non-HTTPS resolved URL:' >&2
+            echo "$bad_urls" >&2
+            exit 1
+          fi
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Find module.ts or module.tsx
+        id: find-module-ts
+        run: |
+          MODULETS="$(find ./src -type f \( -name "module.ts" -o -name "module.tsx" \))"
+          echo "modulets=${MODULETS}" >> "$GITHUB_OUTPUT"
+
+      - name: Compatibility check
+        uses: grafana/plugin-actions/is-compatible@6a283a4015776c4becd1708906b59b2e78c221ae # is-compatible/v1.0.4
+        with:
+          module: ${{ steps.find-module-ts.outputs.modulets }}
+          comment-pr: 'no'
+          fail-if-incompatible: 'yes'

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "panel",
+  "name": "SpiderGraph",
+  "id": "aviadshiber-spidergraph-panel",
+  "info": {
+    "keywords": ["panel", "radar", "spider", "multivariate", "comparison"],
+    "description": "Accessible radar and spider charts with per-axis scaling, wide and long table support, and raw-value inspection.",
+    "author": { "name": "Aviad Shiber", "url": "https://github.com/aviadshiber" },
+    "logos": { "small": "img/logo.svg", "large": "img/logo.svg" },
+    "links": [
+      { "name": "GitHub", "url": "https://github.com/aviadshiber/grafana-spider-graph" },
+      { "name": "Documentation", "url": "https://github.com/aviadshiber/grafana-spider-graph#readme" },
+      { "name": "Report an issue", "url": "https://github.com/aviadshiber/grafana-spider-graph/issues" }
+    ],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": { "grafanaDependency": ">=11.5.2", "plugins": [] },
+  "state": "alpha"
+}

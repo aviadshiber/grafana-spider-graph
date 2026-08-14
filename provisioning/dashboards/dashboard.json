@@ -1,0 +1,49 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    {
+      "datasource": { "type": "grafana-testdata-datasource", "uid": "spidergraph-testdata" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "schemaVersion": 1,
+        "dataMode": "wide",
+        "axisField": "Axis",
+        "duplicateReducer": "last",
+        "missingValue": "gap",
+        "scaleMode": "per-axis",
+        "includeZero": true,
+        "clampValues": true,
+        "gridLevels": 5,
+        "startAngle": -90,
+        "clockwise": true,
+        "showAxisLabels": true,
+        "showValues": false,
+        "fillOpacity": 0.18,
+        "lineWidth": 2,
+        "pointRadius": 3,
+        "legendPlacement": "bottom",
+        "showAccessibleTable": true,
+        "useDashPatterns": true,
+        "maxAxes": 24,
+        "maxSeries": 20
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-testdata-datasource", "uid": "spidergraph-testdata" },
+          "refId": "A",
+          "scenarioId": "raw_frame",
+          "rawFrameContent": "[{\"columns\":[{\"text\":\"Axis\",\"type\":\"string\"},{\"text\":\"Service A\",\"type\":\"number\"},{\"text\":\"Service B\",\"type\":\"number\"}],\"rows\":[[\"Availability\",99.9,99.5],[\"Latency\",120,180],[\"Throughput\",850,720],[\"Satisfaction\",88,92],[\"Efficiency\",74,81]]}]"
+        }
+      ],
+      "title": "Service comparison",
+      "type": "aviadshiber-spidergraph-panel"
+    }
+  ],
+  "schemaVersion": 41,
+  "title": "SpiderGraph examples",
+  "uid": "spidergraph-examples",
+  "version": 1
+}

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/aviadshiber/grafana-spider-graph/security/advisories/new
+    about: Report security issues privately instead of opening a public issue.
+  - name: Usage and support
+    url: https://github.com/aviadshiber/grafana-spider-graph/blob/main/docs/support.md
+    about: Check supported versions, diagnostics, and the information needed for help.

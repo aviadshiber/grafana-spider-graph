@@ -1,0 +1,68 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    # Wait 5 days before updating to help circumvent supply chain attacks
+    cooldown:
+      default-days: 5
+      # Exclude plugin-e2e to prevent false positives with canary e2e tests
+      exclude:
+        - '@grafana/plugin-e2e'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    # eslint-plugin-react does not support ESLint 10 yet. Keep ESLint on the
+    # latest 9.x release until its peer range includes the next major.
+    ignore:
+      - dependency-name: 'eslint'
+        update-types:
+          - 'version-update:semver-major'
+      # Keep the development type surface aligned with the Node versions
+      # supported by @grafana/plugin-e2e.
+      - dependency-name: '@types/node'
+        update-types:
+          - 'version-update:semver-major'
+      # TypeScript 7 is not yet supported by @typescript-eslint 8.x.
+      # Remove this rule once its peer range includes TypeScript 7.
+      - dependency-name: 'typescript'
+        versions:
+          - '>=7.0.0 <8.0.0'
+    groups:
+      unit-test:
+        patterns:
+          - '@testing-library/*'
+          - 'jest*'
+          - '@types/jest'
+      eslint:
+        patterns:
+          - '@grafana/eslint-config'
+          - 'eslint*'
+          - '@typescript-eslint/*'
+          - '@stylistic/*'
+      grafana:
+        patterns:
+          - '@grafana/*'
+        dependency-type: 'production'
+        update-types:
+          - 'minor'
+          - 'patch'
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'chore(ci)'
+    open-pull-requests-limit: 5

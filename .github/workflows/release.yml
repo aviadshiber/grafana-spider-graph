@@ -1,0 +1,74 @@
+# This GitHub Action automates the process of building Grafana plugins.
+# (For more information, see https://github.com/grafana/plugin-actions/blob/main/build-plugin/README.md)
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Run workflow on version tags, e.g. v1.0.0.
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    environment: release-signing
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify release tag and source
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_TYPE}" = "tag"
+          test "${RELEASE_TAG#v}" = "$(node -p "require('./package.json').version")"
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          test "$(git rev-list -n 1 "${RELEASE_TAG}^{commit}")" = "$RELEASE_SHA"
+          git merge-base --is-ancestor "$RELEASE_SHA" refs/remotes/origin/main
+
+      - name: Verify npm registry and lockfile
+        run: |
+          set -euo pipefail
+          test "$(npm config get registry)" = "https://registry.npmjs.org/"
+          bad_urls="$(jq -r '.. | objects | .resolved? // empty' package-lock.json | grep -Ev '^https://registry\.npmjs\.org/' || true)"
+          if [ -n "$bad_urls" ]; then
+            echo 'package-lock.json contains a non-public or non-HTTPS resolved URL:' >&2
+            echo "$bad_urls" >&2
+            exit 1
+          fi
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate CycloneDX SBOM
+        run: npm run sbom
+
+      - uses: grafana/plugin-actions/build-plugin@8b12a2d6fa5fc0939a6bf75905453d4b505ef29a # build-plugin/v1.2.0
+        with:
+          # GRAFANA_ACCESS_POLICY_TOKEN is an environment secret. The official
+          # action exposes it only to its nested signing step. It is intentionally
+          # absent for the first public submission and added after Grafana grants
+          # this plugin a signature level.
+          policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
+          attestation: true
+
+      - name: Attach SBOM to draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" sbom.cdx.json --clobber

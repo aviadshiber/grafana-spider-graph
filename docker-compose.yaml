@@ -1,0 +1,25 @@
+services:
+  grafana:
+    extends:
+      file: .config/docker-compose-base.yaml
+      service: grafana
+    # The managed base config came from the sibling plugin scaffold. Override
+    # identity-specific values here rather than editing `.config/` directly.
+    container_name: aviadshiber-spidergraph-panel
+    build:
+      args:
+        # Anonymous access is disabled by default. Opt in explicitly for local
+        # development when an Admin session is useful.
+        anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-false}
+    ports: !override
+      - '127.0.0.1:3000:3000/tcp'
+    volumes: !override
+      - ./dist:/var/lib/grafana/plugins/aviadshiber-spidergraph-panel
+      - ./provisioning:/etc/grafana/provisioning
+      - ./:/root/aviadshiber-spidergraph-panel
+    environment:
+      GF_PLUGINS_ENABLE_ALPHA: 'true'
+      GF_AUTH_ANONYMOUS_ENABLED: ${ANONYMOUS_AUTH_ENABLED:-false}
+      GF_AUTH_ANONYMOUS_ORG_ROLE: ${ANONYMOUS_AUTH_ORG_ROLE:-Viewer}
+      GF_LOG_FILTERS: plugin.aviadshiber-spidergraph-panel:debug
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: aviadshiber-spidergraph-panel

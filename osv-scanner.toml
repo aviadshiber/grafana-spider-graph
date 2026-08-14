@@ -1,0 +1,9 @@
+[[IgnoredVulns]]
+id = "GHSA-wrjc-x8rr-h8h6"
+ignoreUntil = 2026-10-30
+reason = "Transitive through @grafana/ui only. Webpack externalizes react-router, Grafana supplies it at runtime, and SpiderGraph imports neither navigation nor SSR hydration APIs."
+
+[[IgnoredVulns]]
+id = "GHSA-337j-9hxr-rhxg"
+ignoreUntil = 2026-10-30
+reason = "Transitive through @grafana/ui only. Webpack externalizes react-router, Grafana supplies it at runtime, and SpiderGraph imports neither navigation nor SSR hydration APIs."
