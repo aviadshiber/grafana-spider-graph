@@ -59,16 +59,37 @@ jobs:
       - name: Generate CycloneDX SBOM
         run: npm run sbom
 
-      - uses: grafana/plugin-actions/build-plugin@8b12a2d6fa5fc0939a6bf75905453d4b505ef29a # build-plugin/v1.2.0
+      - name: Verify private signing configuration
+        env:
+          GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
+          GRAFANA_PLUGIN_ROOT_URLS: ${{ vars.GRAFANA_PLUGIN_ROOT_URLS }}
+        run: |
+          set -euo pipefail
+          test -n "$GRAFANA_ACCESS_POLICY_TOKEN" || {
+            echo 'GRAFANA_ACCESS_POLICY_TOKEN is required for production releases.' >&2
+            exit 1
+          }
+          test -n "$GRAFANA_PLUGIN_ROOT_URLS" || {
+            echo 'GRAFANA_PLUGIN_ROOT_URLS must match the target Grafana root_url configuration.' >&2
+            exit 1
+          }
+
+      - id: build-plugin
+        uses: grafana/plugin-actions/build-plugin@8b12a2d6fa5fc0939a6bf75905453d4b505ef29a # build-plugin/v1.2.0
         with:
-          # GRAFANA_ACCESS_POLICY_TOKEN is an environment secret. The official
-          # action exposes it only to its nested signing step. It is intentionally
-          # absent for the first public submission and added after Grafana grants
-          # this plugin a signature level.
+          # The token is exposed only to the official nested signing step. Root
+          # URLs bind a private signature to the approved Grafana instances.
           policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
+          sign_root_urls: ${{ vars.GRAFANA_PLUGIN_ROOT_URLS }}
           attestation: true
 
-      - name: Attach SBOM to draft release
+      - name: Generate SHA-256 checksum
+        env:
+          ARCHIVE: ${{ steps.build-plugin.outputs.archive }}
+        run: sha256sum "$ARCHIVE" > "${ARCHIVE}.sha256"
+
+      - name: Attach production evidence to draft release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" sbom.cdx.json --clobber
+          ARCHIVE: ${{ steps.build-plugin.outputs.archive }}
+        run: gh release upload "$GITHUB_REF_NAME" sbom.cdx.json "${ARCHIVE}.sha256" --clobber

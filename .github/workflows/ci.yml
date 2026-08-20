@@ -114,6 +114,21 @@ jobs:
             echo "archive=${GRAFANA_PLUGIN_ARTIFACT}"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Verify production compatibility metadata
+        run: |
+          node <<'NODE'
+          const semver = require('semver');
+          const plugin = require('./dist/plugin.json');
+          const productionVersion = '11.5.2';
+
+          if (plugin.state !== 'beta') {
+            throw new Error(`Expected beta lifecycle state, received ${plugin.state}`);
+          }
+          if (!semver.satisfies(productionVersion, plugin.dependencies.grafanaDependency, { includePrerelease: true })) {
+            throw new Error(`${productionVersion} does not satisfy ${plugin.dependencies.grafanaDependency}`);
+          }
+          NODE
+
       - name: Package plugin
         id: package-plugin
         run: |
@@ -170,6 +185,12 @@ jobs:
       fail-fast: false
       matrix:
         GRAFANA_IMAGE: ${{fromJson(needs.resolve-versions.outputs.matrix)}}
+        include:
+          # The internal production deployment currently runs this exact patch.
+          # Keep it explicit even when the resolver advances to a newer 11.5.x.
+          - GRAFANA_IMAGE:
+              name: grafana-enterprise
+              VERSION: 11.5.2
     name: e2e test ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}
     runs-on: ubuntu-latest
     steps:

@@ -18,7 +18,6 @@ services:
       - ./provisioning:/etc/grafana/provisioning
       - ./:/root/aviadshiber-spidergraph-panel
     environment:
-      GF_PLUGINS_ENABLE_ALPHA: 'true'
       GF_AUTH_ANONYMOUS_ENABLED: ${ANONYMOUS_AUTH_ENABLED:-false}
       GF_AUTH_ANONYMOUS_ORG_ROLE: ${ANONYMOUS_AUTH_ORG_ROLE:-Viewer}
       GF_LOG_FILTERS: plugin.aviadshiber-spidergraph-panel:debug

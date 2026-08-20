@@ -23,5 +23,5 @@
     "updated": "%TODAY%"
   },
   "dependencies": { "grafanaDependency": ">=11.5.2", "plugins": [] },
-  "state": "alpha"
+  "state": "beta"
 }
