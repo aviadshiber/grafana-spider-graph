@@ -6,12 +6,14 @@ Build with `npm ci && npm run build`. Development Grafana accepts the unsigned p
 
 SpiderGraph is a frontend-only panel. It requires no backend process, credentials, datasource permissions, or additional network access. Production distributions must be signed and installed as immutable artifacts.
 
-Before creating a `v0.1.0` tag, configure the protected GitHub `github-actions-spidergraph-release` environment with:
+Configure the protected GitHub `github-actions-spidergraph-release` environment with:
 
 - Secret `GRAFANA_ACCESS_POLICY_TOKEN`: a Grafana access policy token with `plugins:write` for the organization matching the `aviadshiber` plugin-ID prefix.
 - Variable `GRAFANA_PLUGIN_ROOT_URLS`: the comma-separated Grafana `root_url` values approved by the administrators. These values must match the server configuration exactly; do not infer them from a browser URL.
 
-The tagged release workflow verifies that the tag is on `main` and matches `package.json`, verifies the registry and lockfile, creates an SBOM, builds and privately signs through Grafana's official action, produces a SHA-256 checksum, and attaches build provenance. Package contents use the exact top-level directory `aviadshiber-spidergraph-panel`.
+Every PR merged to protected `main` automatically creates a deterministic prerelease whose SemVer patch component is the PR number (for example, PR #13 creates `v0.1.13`). The workflow creates an immutable tag on the reviewed merge commit and explicitly dispatches the signed release on that tag. Retries verify and reuse the same tag; a conflicting tag or release fails closed.
+
+The release workflow verifies that the tag is on `main`, sets the matching package version in the isolated build workspace, verifies the registry and lockfile, creates an SBOM, builds and privately signs through Grafana's official action, produces SHA-1 and SHA-256 checksums, attaches build provenance, and publishes the GitHub prerelease. It never commits generated version files or release metadata directly to `main`. Package contents use the exact top-level directory `aviadshiber-spidergraph-panel`.
 
 ## Administrator installation
 
