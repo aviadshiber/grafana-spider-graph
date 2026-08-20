@@ -198,12 +198,14 @@ jobs:
           GRAFANA_PLUGIN_ROOT_URLS: ${{ vars.GRAFANA_PLUGIN_ROOT_URLS }}
         run: |
           set -euo pipefail
+          expected_root_urls='https://grafana-testing.taboolasyndication.com,http://grafana.taboolasyndication.com'
+
           test -n "$GRAFANA_ACCESS_POLICY_TOKEN" || {
             echo 'GRAFANA_ACCESS_POLICY_TOKEN is required for releases.' >&2
             exit 1
           }
-          test -n "$GRAFANA_PLUGIN_ROOT_URLS" || {
-            echo 'GRAFANA_PLUGIN_ROOT_URLS must match the target Grafana root_url configuration.' >&2
+          test "$GRAFANA_PLUGIN_ROOT_URLS" = "$expected_root_urls" || {
+            echo 'GRAFANA_PLUGIN_ROOT_URLS must contain the exact approved staging and production root_url values.' >&2
             exit 1
           }
 

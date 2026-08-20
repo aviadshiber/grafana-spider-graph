@@ -9,7 +9,9 @@ SpiderGraph is a frontend-only panel. It requires no backend process, credential
 Configure the protected GitHub `github-actions-spidergraph-release` environment with:
 
 - Secret `GRAFANA_ACCESS_POLICY_TOKEN`: a Grafana access policy token with `plugins:write` for the organization matching the `aviadshiber` plugin-ID prefix.
-- Variable `GRAFANA_PLUGIN_ROOT_URLS`: the comma-separated Grafana `root_url` values approved by the administrators. These values must match the server configuration exactly; do not infer them from a browser URL.
+- Variable `GRAFANA_PLUGIN_ROOT_URLS`: `https://grafana-testing.taboolasyndication.com,http://grafana.taboolasyndication.com`. These comma-separated values match the staging and production `root_url` server configuration exactly; the production value intentionally differs from the browser-facing HTTPS URL.
+
+The release workflow fails closed unless both approved URLs are present in that exact order. Private signatures cannot use a wildcard here; adding another private Grafana instance requires an explicit workflow and variable update followed by a new signed release.
 
 Every PR merged to protected `main` automatically creates a deterministic prerelease whose SemVer patch component is the PR number (for example, PR #13 creates `v0.1.13`). The workflow creates an immutable tag on the reviewed merge commit and explicitly dispatches the signed release on that tag. Retries verify and reuse the same tag; a conflicting tag or release fails closed.
 
