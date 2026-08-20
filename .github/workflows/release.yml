@@ -215,6 +215,7 @@ jobs:
           policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
           sign_root_urls: ${{ vars.GRAFANA_PLUGIN_ROOT_URLS }}
           attestation: true
+          node-version: '22'
 
       - name: Generate SHA-256 checksum
         env:

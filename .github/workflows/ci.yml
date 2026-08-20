@@ -138,11 +138,11 @@ jobs:
           ARCHIVE: ${{ steps.metadata.outputs.archive }}
           PLUGIN_ID: ${{ steps.metadata.outputs.plugin-id }}
 
-      - name: Check plugin.json
+      - name: Validate complete plugin package
         run: |
           docker run --pull=always \
             -v "${PWD}/${ARCHIVE}:/archive.zip:ro" \
-            grafana/plugin-validator-cli@sha256:bb22c43d5cc5762c19a5119bd27d4337056dddeb03633157b64c38c317106211 -analyzer=metadatavalid /archive.zip
+            grafana/plugin-validator-cli@sha256:bb22c43d5cc5762c19a5119bd27d4337056dddeb03633157b64c38c317106211 /archive.zip
         env:
           ARCHIVE: ${{ steps.metadata.outputs.archive }}
 
