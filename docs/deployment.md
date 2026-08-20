@@ -6,7 +6,7 @@ Build with `npm ci && npm run build`. Development Grafana accepts the unsigned p
 
 SpiderGraph is a frontend-only panel. It requires no backend process, credentials, datasource permissions, or additional network access. Production distributions must be signed and installed as immutable artifacts.
 
-Before creating a `v0.1.0` tag, configure the protected GitHub `release-signing` environment with:
+Before creating a `v0.1.0` tag, configure the protected GitHub `github-actions-spidergraph-release` environment with:
 
 - Secret `GRAFANA_ACCESS_POLICY_TOKEN`: a Grafana access policy token with `plugins:write` for the organization matching the `aviadshiber` plugin-ID prefix.
 - Variable `GRAFANA_PLUGIN_ROOT_URLS`: the comma-separated Grafana `root_url` values approved by the administrators. These values must match the server configuration exactly; do not infer them from a browser URL.
