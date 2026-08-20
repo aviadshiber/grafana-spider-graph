@@ -4,7 +4,9 @@ All notable SpiderGraph changes are recorded here.
 
 ## Unreleased
 
-No changes yet.
+### Changed
+
+- Private releases are signed for both the Taboola staging and production Grafana `root_url` values.
 
 ## 0.1.0 - 2026-08-13
 
