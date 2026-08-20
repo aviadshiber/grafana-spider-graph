@@ -1,17 +1,157 @@
-# This GitHub Action automates the process of building Grafana plugins.
-# (For more information, see https://github.com/grafana/plugin-actions/blob/main/build-plugin/README.md)
+# This workflow creates one deterministic signed release for every PR merged to
+# protected main. The PR number is the SemVer patch component, so retries are
+# idempotent and concurrent merges cannot allocate the same version.
 name: Release
 
 on:
   push:
-    tags:
-      - 'v*' # Run workflow on version tags, e.g. v1.0.0.
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Deterministic tag created by the post-merge job
+        required: true
+        type: string
+      release_sha:
+        description: Reviewed merge commit to release
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
+  create-tag:
+    if: github.event_name == 'push'
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Resolve merged PR and deterministic version
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          pr_number="$({
+            gh api --paginate \
+              -H 'Accept: application/vnd.github+json' \
+              "/repos/${GITHUB_REPOSITORY}/commits/${RELEASE_SHA}/pulls"
+          } | jq -s -r '
+            add
+            | map(select(.merged_at != null and .base.ref == "main"))
+            | sort_by(.merged_at)
+            | last
+            | .number // empty
+          ')"
+
+          if ! [[ "$pr_number" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Commit ${RELEASE_SHA} is not associated with a merged PR to main; refusing to release." >&2
+            exit 1
+          fi
+
+          version_base="$(node -p "require('./package.json').version.split('.').slice(0, 2).join('.')")"
+          if ! [[ "$version_base" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid major/minor version base: ${version_base}" >&2
+            exit 1
+          fi
+
+          release_tag="v${version_base}.${pr_number}"
+          printf 'pr_number=%s\nrelease_tag=%s\n' "$pr_number" "$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create or verify immutable tag
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+
+          existing_sha="$(git ls-remote --tags origin "refs/tags/${RELEASE_TAG}^{}" | awk '{print $1}')"
+          if [ -z "$existing_sha" ]; then
+            existing_sha="$(git ls-remote --tags origin "refs/tags/${RELEASE_TAG}" | awk '{print $1}')"
+          fi
+
+          if [ -n "$existing_sha" ]; then
+            test "$existing_sha" = "$RELEASE_SHA" || {
+              echo "${RELEASE_TAG} already points to ${existing_sha}, not ${RELEASE_SHA}." >&2
+              exit 1
+            }
+            echo "${RELEASE_TAG} already points to the reviewed merge commit; continuing idempotently."
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git tag -a "$RELEASE_TAG" "$RELEASE_SHA" -m "SpiderGraph ${RELEASE_TAG}"
+            git push origin "refs/tags/${RELEASE_TAG}"
+          fi
+
+      - name: Dispatch signed release at immutable tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          gh workflow run release.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$RELEASE_TAG" \
+            -f "release_tag=${RELEASE_TAG}" \
+            -f "release_sha=${RELEASE_SHA}"
+
+  verify-release:
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.guard.outputs.publish }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify tag, merge commit, and existing release
+        id: guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_TYPE}" = 'tag'
+          test "${GITHUB_REF_NAME}" = "$RELEASE_TAG"
+          test "$GITHUB_SHA" = "$RELEASE_SHA"
+          version_base="$(node -p "require('./package.json').version.split('.').slice(0, 2).join('.')")"
+          expected_prefix="v${version_base}."
+          test "${RELEASE_TAG#"$expected_prefix"}" != "$RELEASE_TAG"
+          [[ "${RELEASE_TAG#"$expected_prefix"}" =~ ^[1-9][0-9]*$ ]]
+
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          test "$(git rev-list -n 1 "${RELEASE_TAG}^{commit}")" = "$RELEASE_SHA"
+          git merge-base --is-ancestor "$RELEASE_SHA" refs/remotes/origin/main
+
+          if release_json="$(gh release view "$RELEASE_TAG" --json isDraft 2>/dev/null)"; then
+            if [ "$(jq -r '.isDraft' <<< "$release_json")" = 'false' ]; then
+              echo "Release ${RELEASE_TAG} is already published; retry is complete."
+              echo 'publish=false' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          echo 'publish=true' >> "$GITHUB_OUTPUT"
+
   release:
+    needs: verify-release
+    if: needs.verify-release.outputs.publish == 'true'
     environment: github-actions-spidergraph-release
     permissions:
       contents: write
@@ -24,17 +164,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify release tag and source
+      - name: Set deterministic release version
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          test "${GITHUB_REF_TYPE}" = "tag"
-          test "${RELEASE_TAG#v}" = "$(node -p "require('./package.json').version")"
-          git fetch --no-tags origin main:refs/remotes/origin/main
-          test "$(git rev-list -n 1 "${RELEASE_TAG}^{commit}")" = "$RELEASE_SHA"
-          git merge-base --is-ancestor "$RELEASE_SHA" refs/remotes/origin/main
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: npm version "${RELEASE_TAG#v}" --no-git-tag-version --allow-same-version
 
       - name: Verify npm registry and lockfile
         run: |
@@ -66,7 +199,7 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$GRAFANA_ACCESS_POLICY_TOKEN" || {
-            echo 'GRAFANA_ACCESS_POLICY_TOKEN is required for production releases.' >&2
+            echo 'GRAFANA_ACCESS_POLICY_TOKEN is required for releases.' >&2
             exit 1
           }
           test -n "$GRAFANA_PLUGIN_ROOT_URLS" || {
@@ -88,8 +221,14 @@ jobs:
           ARCHIVE: ${{ steps.build-plugin.outputs.archive }}
         run: sha256sum "$ARCHIVE" > "${ARCHIVE}.sha256"
 
-      - name: Attach production evidence to draft release
+      - name: Attach evidence and publish release
         env:
           GH_TOKEN: ${{ github.token }}
           ARCHIVE: ${{ steps.build-plugin.outputs.archive }}
-        run: gh release upload "$GITHUB_REF_NAME" sbom.cdx.json "${ARCHIVE}.sha256" --clobber
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          gh release upload "$RELEASE_TAG" sbom.cdx.json "${ARCHIVE}.sha256" --clobber
+          gh release edit "$RELEASE_TAG" \
+            --draft=false \
+            --prerelease
