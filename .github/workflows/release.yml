@@ -198,16 +198,29 @@ jobs:
           GRAFANA_PLUGIN_ROOT_URLS: ${{ vars.GRAFANA_PLUGIN_ROOT_URLS }}
         run: |
           set -euo pipefail
-          expected_root_urls='https://grafana-testing.taboolasyndication.com,http://grafana.taboolasyndication.com'
 
           test -n "$GRAFANA_ACCESS_POLICY_TOKEN" || {
             echo 'GRAFANA_ACCESS_POLICY_TOKEN is required for releases.' >&2
             exit 1
           }
-          test "$GRAFANA_PLUGIN_ROOT_URLS" = "$expected_root_urls" || {
-            echo 'GRAFANA_PLUGIN_ROOT_URLS must contain the exact approved staging and production root_url values.' >&2
+          IFS=',' read -r staging_root_url production_root_url extra_root_urls <<< "$GRAFANA_PLUGIN_ROOT_URLS"
+          test -n "$staging_root_url" && test -n "$production_root_url" && test -z "$extra_root_urls" || {
+            echo 'GRAFANA_PLUGIN_ROOT_URLS must contain exactly two comma-separated root_url values.' >&2
             exit 1
           }
+          test "$staging_root_url" != "$production_root_url" || {
+            echo 'Staging and production root_url values must be distinct.' >&2
+            exit 1
+          }
+          for root_url in "$staging_root_url" "$production_root_url"; do
+            case "$root_url" in
+              http://*|https://*) ;;
+              *) echo 'Each signing root_url must be an absolute HTTP(S) URL.' >&2; exit 1 ;;
+            esac
+            case "$root_url" in
+              *[[:space:]]*) echo 'Signing root_url values must not contain whitespace.' >&2; exit 1 ;;
+            esac
+          done
 
       - id: build-plugin
         uses: grafana/plugin-actions/build-plugin@8b12a2d6fa5fc0939a6bf75905453d4b505ef29a # build-plugin/v1.2.0
