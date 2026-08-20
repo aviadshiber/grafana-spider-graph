@@ -10,7 +10,7 @@ SpiderGraph is a frontend-only Grafana panel for comparing multivariate series o
 
 ![SpiderGraph service comparison dashboard in Grafana](src/img/spidergraph-overview.png)
 
-> **Project status:** SpiderGraph is in active alpha development. The public contract is documented in [`docs/data-model.md`](docs/data-model.md); behavior outside that contract may change before the first stable release.
+> **Project status:** SpiderGraph is in beta. The documented v1 data and option contracts in [`docs/data-model.md`](docs/data-model.md) are compatibility baselines; production deployments should use signed, immutable release artifacts.
 
 ## Highlights
 
@@ -75,12 +75,13 @@ The plugin ID `aviadshiber-spidergraph-panel` is a saved-dashboard compatibility
 
 ```bash
 npm run build
-GRAFANA_ACCESS_POLICY_TOKEN=... npm run sign
+GRAFANA_ACCESS_POLICY_TOKEN=... npm run sign -- \
+  --rootUrls https://your-approved-grafana.example.com/
 mv dist aviadshiber-spidergraph-panel
 zip -r aviadshiber-spidergraph-panel-0.1.0.zip aviadshiber-spidergraph-panel
 ```
 
-Use a signed catalog release for production after Grafana approves the plugin. Unsigned builds are intended for the development environment. See [deployment](docs/deployment.md).
+For production, use the protected tagged-release workflow so the signed archive also includes a checksum, SBOM, and provenance. Unsigned builds are intended only for the development environment. See [deployment](docs/deployment.md).
 
 ## License
 

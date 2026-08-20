@@ -19,4 +19,4 @@ No changes yet.
 
 ### Status
 
-SpiderGraph is alpha. The documented v1 data and option contracts are compatibility baselines.
+SpiderGraph is beta. The documented v1 data and option contracts are compatibility baselines.
