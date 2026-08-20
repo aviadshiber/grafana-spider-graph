@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   release:
-    environment: release-signing
+    environment: github-actions-spidergraph-release
     permissions:
       contents: write
       id-token: write
