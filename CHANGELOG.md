@@ -6,7 +6,7 @@ All notable SpiderGraph changes are recorded here.
 
 ### Changed
 
-- Private releases are signed for both the Taboola staging and production Grafana `root_url` values.
+- Private releases are signed for the Taboola staging and production Grafana `root_url` values, including the HTTPS production endpoint (previously only HTTP), so the plugin loads on an HTTPS production Grafana.
 
 ## 0.1.0 - 2026-08-13
 
