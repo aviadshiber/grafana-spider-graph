@@ -6,7 +6,11 @@ import { SpiderGraphPanel } from './SpiderGraphPanel';
 
 jest.mock('@grafana/ui', () => ({
   useTheme2: () => ({
-    colors: { border: { weak: '#888' }, text: { primary: '#111' }, background: { primary: '#fff' } },
+    colors: {
+      border: { weak: '#888' },
+      text: { primary: '#111', secondary: '#666' },
+      background: { primary: '#fff' },
+    },
     visualization: { getColorByName: () => '#5794f2' },
   }),
 }));
@@ -52,5 +56,29 @@ describe('SpiderGraphPanel', () => {
     render(<SpiderGraphPanel {...props({ showAccessibleTable: true })} />);
     expect(screen.getByRole('table', { name: 'Spider graph values' })).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '8' })).toBeInTheDocument();
+  });
+
+  it('does not render ring labels when showScale is false', () => {
+    render(<SpiderGraphPanel {...props({ showScale: false, scaleMode: 'per-axis' })} />);
+    // '0.2' is the innermost per-axis fraction label — only present when showScale is on.
+    expect(screen.queryByText('0.2')).not.toBeInTheDocument();
+    expect(screen.queryByText('1')).not.toBeInTheDocument();
+  });
+
+  it('renders interpolated absolute values on the rings when showScale and shared scale are on', () => {
+    render(<SpiderGraphPanel {...props({ showScale: true, scaleMode: 'shared' })} />);
+    // shared domain: includeZero -> min 0, max of values (8, 5, 3) -> 8.
+    // rings at fractions 0.2..1.0 -> 1.6, 3.2, 4.8, 6.4, 8.
+    expect(screen.getByText('1.6')).toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
+  });
+
+  it('renders proportion fractions on the rings when showScale is on and scale is per-axis', () => {
+    render(<SpiderGraphPanel {...props({ showScale: true, scaleMode: 'per-axis' })} />);
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('0.8')).toBeInTheDocument();
+    expect(screen.getByText('0.6')).toBeInTheDocument();
+    expect(screen.getByText('0.4')).toBeInTheDocument();
+    expect(screen.getByText('0.2')).toBeInTheDocument();
   });
 });

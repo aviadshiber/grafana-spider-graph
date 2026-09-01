@@ -24,6 +24,7 @@ export interface SpiderGraphOptions {
   clockwise: boolean;
   showAxisLabels: boolean;
   showValues: boolean;
+  showScale: boolean;
   fillOpacity: number;
   lineWidth: number;
   pointRadius: number;
@@ -47,6 +48,7 @@ export const defaultOptions: SpiderGraphOptions = {
   clockwise: true,
   showAxisLabels: true,
   showValues: false,
+  showScale: false,
   fillOpacity: 0.18,
   lineWidth: 2,
   pointRadius: 3,
