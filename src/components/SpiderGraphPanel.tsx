@@ -117,6 +117,10 @@ function formatted(series: SpiderSeries, value: number | undefined): string {
   );
 }
 
+function formatScaleNumber(value: number): string {
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 }).format(value);
+}
+
 export function SpiderGraphPanel({ data, width, height, options: rawOptions }: PanelProps<SpiderGraphOptions>) {
   const theme = useTheme2();
   const options = useMemo(() => resolveOptions(rawOptions), [rawOptions]);
@@ -222,14 +226,35 @@ export function SpiderGraphPanel({ data, width, height, options: rawOptions }: P
             const points = parsed.axes.map((_, index) =>
               polarPoint(index, parsed.axes.length, levelRadius, center, options.startAngle, options.clockwise)
             );
+            const fraction = (level + 1) / options.gridLevels;
+            const scaleLabel =
+              options.scaleMode === 'shared'
+                ? parsed.axes.length > 0
+                  ? formatScaleNumber(
+                      parsed.axes[0].min + (parsed.axes[0].max - parsed.axes[0].min) * fraction
+                    )
+                  : undefined
+                : formatScaleNumber(fraction);
             return (
-              <polygon
-                key={level}
-                points={points.map((point) => `${point.x},${point.y}`).join(' ')}
-                fill="none"
-                stroke={theme.colors.border.weak}
-                strokeWidth={1}
-              />
+              <g key={level}>
+                <polygon
+                  points={points.map((point) => `${point.x},${point.y}`).join(' ')}
+                  fill="none"
+                  stroke={theme.colors.border.weak}
+                  strokeWidth={1}
+                />
+                {options.showScale && scaleLabel !== undefined && (
+                  <text
+                    x={center.x + 4}
+                    y={center.y - levelRadius}
+                    textAnchor="start"
+                    fontSize={10}
+                    fill={theme.colors.text.secondary}
+                  >
+                    {scaleLabel}
+                  </text>
+                )}
+              </g>
             );
           })}
           {axisPoints.map((point, index) => (

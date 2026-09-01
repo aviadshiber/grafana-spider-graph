@@ -139,6 +139,13 @@ export const plugin = new PanelPlugin<SpiderGraphOptions>(SpiderGraphPanel)
         category: ['Display'],
         defaultValue: defaultOptions.showValues,
       })
+      .addBooleanSwitch({
+        path: 'showScale',
+        name: 'Show scale',
+        description: 'Print value labels on the radial grid rings',
+        category: ['Display'],
+        defaultValue: defaultOptions.showScale,
+      })
       .addSliderInput({
         path: 'fillOpacity',
         name: 'Fill opacity',

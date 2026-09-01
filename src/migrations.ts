@@ -35,6 +35,7 @@ export function migrateOptions(input: unknown): SpiderGraphOptions {
     clockwise: boolean(value.clockwise, defaultOptions.clockwise),
     showAxisLabels: boolean(value.showAxisLabels, defaultOptions.showAxisLabels),
     showValues: boolean(value.showValues, defaultOptions.showValues),
+    showScale: boolean(value.showScale, defaultOptions.showScale),
     fillOpacity: number(value.fillOpacity, defaultOptions.fillOpacity, 0, 1),
     lineWidth: number(value.lineWidth, defaultOptions.lineWidth, 0, 10),
     pointRadius: number(value.pointRadius, defaultOptions.pointRadius, 0, 12),
