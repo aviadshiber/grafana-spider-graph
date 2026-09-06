@@ -101,7 +101,8 @@
   "overrides": {
     "@grafana/react-detect": {
       "snyk-nodejs-lockfile-parser": "2.10.3"
-    }
+    },
+    "fast-uri": "^3.1.7"
   },
   "packageManager": "npm@11.17.0"
 }
