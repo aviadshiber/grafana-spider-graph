@@ -203,23 +203,31 @@ jobs:
             echo 'GRAFANA_ACCESS_POLICY_TOKEN is required for releases.' >&2
             exit 1
           }
-          IFS=',' read -r staging_root_url production_root_url extra_root_urls <<< "$GRAFANA_PLUGIN_ROOT_URLS"
-          test -n "$staging_root_url" && test -n "$production_root_url" && test -z "$extra_root_urls" || {
-            echo 'GRAFANA_PLUGIN_ROOT_URLS must contain exactly two comma-separated root_url values.' >&2
+          # Private signatures bind to one or more Grafana root_url values
+          # (GF_SERVER_ROOT_URL). Prod is served over http AND https, so the
+          # list carries both schemes for every approved host — a superset that
+          # only widens where the signature is accepted, never narrows it.
+          IFS=',' read -r -a root_urls <<< "$GRAFANA_PLUGIN_ROOT_URLS"
+          test "${#root_urls[@]}" -ge 2 || {
+            echo 'GRAFANA_PLUGIN_ROOT_URLS must contain at least two comma-separated root_url values.' >&2
             exit 1
           }
-          test "$staging_root_url" != "$production_root_url" || {
-            echo 'Staging and production root_url values must be distinct.' >&2
-            exit 1
-          }
-          for root_url in "$staging_root_url" "$production_root_url"; do
+          seen=""
+          for root_url in "${root_urls[@]}"; do
+            test -n "$root_url" || {
+              echo 'GRAFANA_PLUGIN_ROOT_URLS must not contain empty root_url values.' >&2; exit 1
+            }
             case "$root_url" in
               http://*|https://*) ;;
-              *) echo 'Each signing root_url must be an absolute HTTP(S) URL.' >&2; exit 1 ;;
+              *) echo "Each signing root_url must be an absolute HTTP(S) URL: '$root_url'" >&2; exit 1 ;;
             esac
             case "$root_url" in
               *[[:space:]]*) echo 'Signing root_url values must not contain whitespace.' >&2; exit 1 ;;
             esac
+            case "$seen" in
+              *"|$root_url|"*) echo "Duplicate signing root_url: '$root_url'" >&2; exit 1 ;;
+            esac
+            seen="$seen|$root_url|"
           done
 
       - id: build-plugin
