@@ -9,7 +9,7 @@ SpiderGraph is a frontend-only panel. It requires no backend process, credential
 Configure the protected GitHub `github-actions-spidergraph-release` environment with:
 
 - Secret `GRAFANA_ACCESS_POLICY_TOKEN`: a Grafana access policy token with `plugins:write` for the organization matching the `aviadshiber` plugin-ID prefix.
-- Variable `GRAFANA_PLUGIN_ROOT_URLS`: two or more distinct, comma-separated Grafana `root_url` values approved by the administrators. Each approved host must be listed under every scheme it is served on — production runs on both `http://` and `https://`, so both are included. They must match the server `root_url` (`GF_SERVER_ROOT_URL`) exactly; do not infer them from browser-facing URLs.
+- Variable `GRAFANA_PLUGIN_ROOT_URLS`: two or more distinct, comma-separated Grafana `root_url` values approved by the administrators. The approved hosts are the testing, staging and production Grafana instances. Each approved host must be listed under every scheme it is served on — production runs on both `http://` and `https://`, so both are included for every host. They must match the server `root_url` (`GF_SERVER_ROOT_URL`) exactly; do not infer them from browser-facing URLs.
 
 The release workflow fails closed unless at least two approved, distinct absolute HTTP(S) URLs are configured. Private signatures cannot use a wildcard here; changing the approved private Grafana instances requires a variable update followed by a new signed release.
 
