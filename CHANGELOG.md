@@ -6,8 +6,10 @@ All notable SpiderGraph changes are recorded here.
 
 ### Changed
 
-- Private releases are signed for the Taboola staging and production Grafana `root_url` values, including the HTTPS production endpoint (previously only HTTP), so the plugin loads on an HTTPS production Grafana.
-- Private signature now covers both `http://` and `https://` for the staging and production hosts (four `root_url` values). Production's server `root_url` is `http://grafana.taboolasyndication.com`, which the previous HTTPS-only signature rejected. The release signing gate now accepts two or more distinct approved URLs instead of exactly two.
+- Build against `@grafana/*` 13.3.0 and React 19, matching the React 19 runtime that Grafana ships from 13.2.0. The plugin code needed no changes (`react-detect` reports no React 19 breaking changes), `grafanaDependency` stays `>=11.5.2`, and CI adds an explicit Grafana 13.2.4 e2e run next to 11.5.2 so both React 18 and React 19 runtimes are covered.
+- Private signature adds an approved staging Grafana host under both `http://` and `https://`, alongside the existing testing and production hosts (six `root_url` values). Earlier releases fail signature validation there because the staging `root_url` is missing from the manifest.
+- Private releases are signed for the approved testing and production Grafana `root_url` values, including the HTTPS production endpoint (previously only HTTP), so the plugin loads on an HTTPS production Grafana.
+- Private signature now covers both `http://` and `https://` for the testing and production hosts (four `root_url` values). Production's server `root_url` uses `http://`, which the previous HTTPS-only signature rejected. The release signing gate now accepts two or more distinct approved URLs instead of exactly two.
 
 ## 0.1.0 - 2026-08-13
 

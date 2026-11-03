@@ -191,6 +191,11 @@ jobs:
           - GRAFANA_IMAGE:
               name: grafana-enterprise
               VERSION: 11.5.2
+          # The internal staging deployment (first React 19 runtime) runs this
+          # exact patch ahead of the production upgrade.
+          - GRAFANA_IMAGE:
+              name: grafana-enterprise
+              VERSION: 13.2.4
     name: e2e test ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}
     runs-on: ubuntu-latest
     steps:
