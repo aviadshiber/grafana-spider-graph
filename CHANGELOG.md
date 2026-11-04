@@ -6,7 +6,7 @@ All notable SpiderGraph changes are recorded here.
 
 ### Changed
 
-- CI adds an explicit Grafana 13.2.4 e2e run next to 11.5.2, so the build is tested on both the React 18 and the React 19 Grafana runtime.
+- Build against `@grafana/*` 13.3.0 and React 19, matching the React 19 runtime that Grafana ships from 13.2.0. The plugin code needed no changes (`react-detect` reports no React 19 breaking changes), `grafanaDependency` stays `>=11.5.2`, and CI adds an explicit Grafana 13.2.4 e2e run next to 11.5.2 so both React 18 and React 19 runtimes are covered.
 
 ### Security
 
