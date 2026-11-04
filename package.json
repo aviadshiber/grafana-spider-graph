@@ -102,6 +102,7 @@
     "@grafana/react-detect": {
       "snyk-nodejs-lockfile-parser": "2.10.3"
     },
+    "basic-ftp": "^6.2.1",
     "fast-uri": "^3.1.7",
     "react-custom-scrollbars-2": {
       "react": "$react",
