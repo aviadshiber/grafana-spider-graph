@@ -231,7 +231,7 @@ jobs:
           done
 
       - id: build-plugin
-        uses: grafana/plugin-actions/build-plugin@8b12a2d6fa5fc0939a6bf75905453d4b505ef29a # build-plugin/v1.2.0
+        uses: grafana/plugin-actions/build-plugin@0247ace8990d6b0f9a62e9bffb00232798b360d3 # build-plugin/v2.0.0
         with:
           # The token is exposed only to the official nested signing step. Root
           # URLs bind a private signature to the approved Grafana instances.
